@@ -48,6 +48,18 @@ void TestShrinkImage() {
   shrunk.write("./Output/seq/copley_shrunk");
 }
 
+void TestShrinkImageBurj() {
+  Image im("./Input/burj.png");
+  Image shrunk = ShrinkImage(im, .5, .5);
+  shrunk.write("./Output/burj_shrunk");
+}
+
+void TestShrinkImageMatterhorn() {
+  Image im("./Input/matterhorn2.png");
+  Image shrunk = ShrinkImage(im, .6, 1.0);
+  shrunk.write("./Output/matterhorn2_shrunk");
+}
+
 void TestShrinkImageSequence() {
   Image in("./Input/copley.png");
   vector<Image> shrunk_seq = ShrinkImageSequence(in, .25, .25);
@@ -119,6 +131,8 @@ void TestShrinkImageSequenceFace4() {
   }
 }
 
+
+
 void TestRescale() {
   Image in("./Input/pose_small.png");
   Image shrunk = Rescale(in, 50, 50);
@@ -132,7 +146,9 @@ int main() {
   //test_horizontal_seam();
   //test_vertical_seam();
   //TestShrinkImage();
-  TestShrinkImageSequenceFace4();
+  //TestShrinkImageSequenceFace4();
   //TestRescale();
+  //TestShrinkImageBurj();
+  TestShrinkImageMatterhorn();
   return 0;
 }
