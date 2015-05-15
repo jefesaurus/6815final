@@ -10,114 +10,17 @@
 // #include <unistd.h>
 
 using namespace std;
-// Put your tests cases here! Make at least three of them.
 
-void test_horizontal_seam() {
-  Image im("./Input/copley.png");
-
-  Image energy = Energy(im);
-  Image cumulative_energy = ComputeCumulativeEnergy(energy, false);
-  cumulative_energy.write("./Output/copley_cumulative_horizontal.png");
-
-  vector<int> seam = GetOptimalSeam(cumulative_energy, false);
-  Image highlighted = HighlightSeam(im, seam, false);
-  highlighted.write("./Output/copley_seam_horizontal.png");
-
-  Image removed = CarveSeam(im, seam, false);
-  removed.write("./Output/copley_carved_horizontal.png");
-}
-
-void test_vertical_seam() {
-  Image im("./Input/copley.png");
-
-  Image energy = Energy(im);
-  Image cumulative_energy = ComputeCumulativeEnergy(energy, true);
-  cumulative_energy.write("./Output/copley_cumulative_vertical.png");
-
-  vector<int> seam = GetOptimalSeam(cumulative_energy, true);
-  Image highlighted = HighlightSeam(im, seam, true);
-  highlighted.write("./Output/copley_seam_vertical.png");
-
-  Image removed = CarveSeam(im, seam, true);
-  removed.write("./Output/copley_carved_vertical.png");
-}
-
-void TestShrinkImage() {
-  Image im("./Input/copley.png");
-  Image shrunk = ShrinkImage(im, .95, .95);
-  shrunk.write("./Output/seq/copley_shrunk");
-}
-
-void TestShrinkImageBurj() {
-  Image im("./Input/burj.png");
-  Image shrunk = ShrinkImage(im, .5, .5);
-  shrunk.write("./Output/burj_shrunk");
-}
-
+// Generic example shrinking only in X
 void TestShrinkImageMatterhorn() {
-  Image im("./Input/matterhorn2.png");
+  Image im("./Input/matterhorn.png");
   Image shrunk = ShrinkImage(im, .6, 1.0);
-  shrunk.write("./Output/matterhorn2_shrunk");
+  shrunk.write("./Output/matterhorn_shrunk");
 }
 
-void TestShrinkImageSequence() {
-  Image in("./Input/copley.png");
-  vector<Image> shrunk_seq = ShrinkImageSequence(in, .25, .25);
-  
-  char buffer [50];
-  for (int n = 0; n < shrunk_seq.size(); n++){
-    sprintf(buffer, "./Output/seq/copley_shrunk_%d.png", n);
-    shrunk_seq[n].write(buffer);
-  }
-}
-
+// Generates a sequence of video frames of the process
 void TestShrinkImageSequenceFace() {
-  Image in("./Input/pose_small.png");
-  int orig_width = in.width(); 
-  int orig_height = in.height(); 
-  float factor = .25;
-  vector<Image> shrunk_seq = ShrinkImageSequence(in, factor, factor);
-  
-  char buffer [50];
-  for (int n = 0; n < shrunk_seq.size(); n++){
-    sprintf(buffer, "./Output/seq/pose_shrunk_%08d.png", n);
-    Image rescaled = Rescale(shrunk_seq[n], orig_width, orig_height);
-    rescaled.write(buffer);
-  }
-}
-
-void TestShrinkImageSequenceFace2() {
-  Image in("./Input/pose_2_small.png");
-  int orig_width = in.width(); 
-  int orig_height = in.height(); 
-  float factor = .25;
-  vector<Image> shrunk_seq = ShrinkImageSequence(in, factor, factor);
-  
-  char buffer [50];
-  for (int n = 0; n < shrunk_seq.size(); n++){
-    sprintf(buffer, "./Output/seq/pose_2_shrunk_%08d.png", n);
-    Image rescaled = Rescale(shrunk_seq[n], orig_width, orig_height);
-    rescaled.write(buffer);
-  }
-}
-
-void TestShrinkImageSequenceFace3() {
-  Image in("./Input/pose_3_small.png");
-  int orig_width = in.width(); 
-  int orig_height = in.height(); 
-  float factor = .25;
-  vector<Image> shrunk_seq = ShrinkImageSequence(in, factor, factor);
-  
-  char buffer [50];
-  for (int n = 0; n < shrunk_seq.size(); n++){
-    sprintf(buffer, "./Output/seq/pose_3_shrunk_%08d.png", n);
-    Image rescaled = Rescale(shrunk_seq[n], orig_width, orig_height);
-    rescaled.write(buffer);
-  }
-}
-
-void TestShrinkImageSequenceFace4() {
-  Image in("./Input/glalonde_small.png");
+  Image in("./Input/glalonde.png");
   int orig_width = in.width(); 
   int orig_height = in.height(); 
   float factor = .25;
@@ -131,24 +34,90 @@ void TestShrinkImageSequenceFace4() {
   }
 }
 
+// The first output is the actual optimal output
+// The second is the energy map
+void TestOptimal() {
+  Image in("./Input/cat.png");
+  vector<Image> shrunk = ShrinkImageOptimalOrdering(in, .8, .8);
+  shrunk[0].write("./Output/cat_optimalshrink.png");
+  shrunk[1].write("./Output/cat_energyremoved.png");
+}
 
 
-void TestRescale() {
-  Image in("./Input/pose_small.png");
-  Image shrunk = Rescale(in, 50, 50);
-  shrunk.write("./Output/test_rescale.png");
+/* CAT IMAGE TEST SEQUENCE */
+
+// The first step is to get the energy value for each pixel.
+void TestEnergyCat() {
+  Image im("./Input/cat.png");
+  Image energy = Energy(im);
+  energy = energy / energy.max();
+  energy.write("./Output/cat_energy.png");
+}
+
+// Next accumulate the energy for "connected" pixels along the vertical dimension
+void TestVerticalCumulativeEnergyCat() {
+  Image im("./Input/cat.png");
+  Image energy = Energy(im);
+  Image cumulative_energy = ComputeCumulativeEnergy(energy, true);
+  cumulative_energy = cumulative_energy / cumulative_energy.max();
+  cumulative_energy.write("./Output/cat_vertical.png");
+}
+
+// Next, find the optimal seam (with the lowest energy)
+// In this test, we highlight that seam on the original image.
+void TestVerticalSeamCat() {
+  Image im("./Input/cat.png");
+  Image energy = Energy(im);
+  Image cumulative_energy = ComputeCumulativeEnergy(energy, true);
+  vector<int> seam = GetOptimalSeam(cumulative_energy, true);
+  Image highlighted = HighlightSeam(im, seam, true);
+  highlighted.write("./Output/cat_vertical_seam_highlit.png");
+}
+
+// Finally, remove that seam from the original image.
+void TestVerticalSeamCarvedCat() {
+  Image im("./Input/cat.png");
+  Image energy = Energy(im);
+  Image cumulative_energy = ComputeCumulativeEnergy(energy, true);
+  vector<int> seam = GetOptimalSeam(cumulative_energy, true);
+  Image highlighted = HighlightSeam(im, seam, true);
+  Image removed = CarveSeam(im, seam, true);
+  removed.write("./Output/cat_vertical_seam_carved.png");
+}
+
+// The final test is just the above repeated to satisfaction.
+void TestShrinkCat() {
+  Image im("./Input/cat.png");
+  Image shrunk = ShrinkImage(im, .6, .6);
+  shrunk.write("./Output/cat_shrunk.png");
+}
+
+// This generates the seam index for the given retargeting scheme
+// using the same arguments as a regular shrink call
+void TestSeamImage() {
+  Image im("./Input/cat.png");
+  Image shrunk = GetSeamImage(im, .01, .01);
+  shrunk.write("./Output/cat_seams_many.png");
 }
 
 
 // Your code **has to compile** on the submission system with all of the test cases
 // uncommented! We will not grade the contents of this main function
 int main() {
-  //test_horizontal_seam();
-  //test_vertical_seam();
-  //TestShrinkImage();
-  //TestShrinkImageSequenceFace4();
-  //TestRescale();
-  //TestShrinkImageBurj();
+  // Basic exmaple
   TestShrinkImageMatterhorn();
+
+  // The main tests
+  TestEnergyCat();
+  TestVerticalCumulativeEnergyCat();
+  TestVerticalSeamCat();
+  TestVerticalSeamCarvedCat();
+  TestShrinkCat();
+
+  // These ones take a really long time:
+  //TestSeamImage();
+  //TestOptimal();
+  //TestShrinkImageSequenceFace();
+
   return 0;
 }
